@@ -1,0 +1,114 @@
+---
+title: "Validation Study"
+author: "Megan McMahon"
+date: "1/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+
+steps_files <- list.files("~/Box/CogNeuroLab/Wearable Assessment/data/fitbit", pattern = "WA_?????_.*.minuteStepsNarrow.*.csv", recursive = TRUE, full.names= TRUE)
+
+d <- read.csv(steps_files[1])
+head(d)
+
+```
+
+```{r}
+read_activity_file <- function(filename, device) {
+  # read actigraphy file - csv format, 2 columns, datetime and activity
+  d=read.csv(filename, header=TRUE, sep=',', na.string=' ', stringsAsFactors = FALSE)
+  colnames(d) <- c('time', 'activity')
+  
+  if (device == "fitbit" | device == "Fitbit") {
+    d$time <- lubridate::parse_date_time(d$time, "%m/%d/%Y %I:%M:%S %p")
+    d$record_id <- stringr::str_sub(basename(filename), 4, 8)
+    d$period <- tail(d$time, 1) - head(d$time, 1)
+    
+  } else if (device == "actiwatch" | device == "Actiwatch") {
+    d$record_id <- stringr::str_sub(basename(filename), 1, 5)
+    d$period <- ymd_hms(tail(d$time, 1), tz="UTC") - ymd_hms(head(d$time, 1), tz="UTC")
+    
+  } else {
+    print("Invalid device type")
+  }
+  
+  d %>%
+    mutate(hour = lubridate::hour(time)) %>%
+    group_by(hour) %>% 
+    summarise(activity_h=sum(activity)) %>%
+    na.omit()
+  
+  return(d)
+}
+
+get_all_activity_data <- function(actiwatch_file, fitbit_file, print = TRUE) {
+  #act <- read_activity_file(actiwatch_file, "actiwatch")
+  fitbit <- read_activity_file(fitbit_file, "fitbit")
+  d <- merge(act, select(fitbit, -record_id), by = "time", all = TRUE, suffixes = c("_act", "_fit") )
+  
+  
+  print(head(d))
+  
+  return(d)
+}
+
+# generate random actiwatch data for testing
+ex <- read_activity_file(steps_files[1], "fitbit")
+act <- ex
+corrupt <- rbinom(length(act$activity),1,0.1)    # choose an average of 10% to corrupt at random
+corrupt <- as.logical(corrupt)
+noise <- rnorm(sum(corrupt),0,10) # generate the noise to add
+act$activity[corrupt] <- act$activity[corrupt] + noise      # about 10% of x has been corrupted
+
+# full data
+d_new <- get_all_activity_data(NA, steps_files[1])
+```
+
+
+
+```{r}
+plot_steps <- function(d){
+  
+  #alpha = 0.4 as example to make transparent lines
+  p.act <- ggplot(d) +
+    geom_line(aes(x = time, y = activity_act, color = "Actiwatch"), size = 0.3) +
+    geom_line(aes(x = time, y = activity_fit, color = "Fitbit"), size = 0.3) +
+    theme_minimal() +
+    scale_color_manual(name = "Device", values = c("blue", "red")) +
+    facet_wrap(. ~ day(time), scales = "free_x") +
+    scale_x_discrete(expand = c(0,0), label = '') + 
+    xlab("Time") + ylab("Activity") +
+    ggtitle(paste("Activity Band Data", d$record_id[1]))
+  
+  return(p.act)
+}
+
+plot_steps(d_new)
+```
+
+
+
+```{r}
+plot_steps_diff <- function(d){
+
+  p.diff <- ggplot(d) +
+    geom_line(aes(x = time, y = activity_act - activity_fit), size = 0.3) +
+    theme_minimal() +
+    facet_wrap(. ~ day(time), scales = "free_x") +
+    scale_x_discrete(expand = c(0,0), label = '') + 
+    xlab("Time") + ylab("Activity") +
+    ggtitle(paste("Discrepancy in Activity Band Recordings:", d$record_id[1]))
+  
+  return(p.diff)
+}
+
+plot_steps_diff(d_new)
+```
+
