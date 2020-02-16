@@ -20,6 +20,7 @@ head(d)
 
 ```
 
+
 ```{r}
 read_activity_file <- function(filename, device) {
   # read actigraphy file - csv format, 2 columns, datetime and activity
@@ -79,7 +80,7 @@ plot_steps <- function(d){
   #alpha = 0.4 as example to make transparent lines
   p.act <- ggplot(d) +
     geom_line(aes(x = time, y = activity_act, color = "Actiwatch"), size = 0.3) +
-    geom_line(aes(x = time, y = activity_fit, color = "Fitbit"), size = 0.3) +
+    #geom_line(aes(x = time, y = activity_fit, color = "Fitbit"), size = 0.3) +
     theme_minimal() +
     scale_color_manual(name = "Device", values = c("blue", "red")) +
     facet_wrap(. ~ day(time), scales = "free_x") +
