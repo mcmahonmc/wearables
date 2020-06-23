@@ -45,7 +45,8 @@ df3$Steps <- ifelse(is.na(df3$Value), NA, df3$Steps)
 # now we want to interpolate step counts at minutes when watch was off
 plot_interpolation <- function(df, starttime, endtime, method = "linear", f = NA, maxgap = "none"){
   
-  df3$`Steps Interpolated` <- na.approx(df$Steps,  maxgap = maxgap, method = method, f = f)
+  df3$`Steps Interpolated` <- na.approx(df$Steps, method = method, f = f, maxgap = maxgap)
+  # zoo package function approx()
   
   df3 %>%
   filter(Time > starttime) %>%
@@ -86,3 +87,18 @@ plot_interpolation(df, starttime, endtime, method, f, maxgap)
 
 maxgap = 60 #minutes
 plot_interpolation(df, starttime, endtime, method, f, maxgap)
+
+
+
+#Practice zone!
+df3$`Steps Interpolated` <- na.approx(df$Steps, method = method, f = f, maxgap = maxgap) ##CHANGE THIS FUNCTION
+# zoo package function approx()
+
+df3 %>%
+  filter(Time > starttime) %>%
+  filter(Time < endtime) %>%
+  pivot_longer(cols = c(Steps, `Steps Interpolated`), names_to = "Key") %>%
+  ggplot() + 
+  geom_line(aes(x = Time, y = value, color = Key), size = 2) + 
+  facet_wrap(. ~ Key) + theme_classic() + theme(legend.position = "none") +
+  ylab("Steps")
