@@ -1,0 +1,331 @@
+---
+title: "Fitbit Analysis"
+author: "Megan McMahon"
+date: "4/23/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(readr)
+library(tidyverse)
+
+work_dir <- "~/Box/CogNeuroLab/Wearables/data/circadian_measures/7_days/"
+```
+
+```{r read-data, warning=F}
+fit <- read_csv(paste0(work_dir, "nparact_7days_fit.csv"))
+fit$Device <- "Fitbit Charge 2 HR"
+act <- read_csv(paste0(work_dir, "nparact_7days_act.csv"))
+act$Device <- "Actiwatch 2.0"
+
+fitc <- read_csv(paste0(work_dir, "cosinor_7days_fit.csv"))
+actc <- read_csv(paste0(work_dir, "cosinor_7days_act.csv"))
+
+d1 <- merge(fit, fitc, by = "record_id")
+d2 <- merge(act, actc, by = "record_id")
+d <- rbind(d1, d2)
+
+d$Device <- as.factor(d$Device)
+d$Group <- factor(ifelse(d$record_id < 20000, -1, 1), labels = c("Young Adults", "Older Adults"))
+
+d %>%
+  group_by(Group, Device) %>%
+  summarise_all(list(mean = mean, sd = sd))
+```
+
+# Non-Parametric Circadian Measures
+
+```{r boxplot}
+d %>%
+  drop_na() %>%
+  ggplot() + 
+  geom_boxplot(aes(x = Device, y = IS, fill = Group)) + 
+  theme_classic() + 
+  facet_wrap(~ Group) +
+  scale_fill_brewer(palette="Set1") +
+  ggsave("~/Box/CogNeuroLab/Wearables/results/figures/IS_box.png", dpi = 300, height = 5, width = 8)
+
+```
+
+```{r}
+d %>%
+  drop_na() %>%
+  ggplot() + 
+  geom_boxplot(aes(x = Device, y = IV, fill = Group)) + 
+  theme_classic() + 
+  facet_wrap(~ Group) +
+  scale_fill_brewer(palette="Set1") +
+  ggsave("~/Box/CogNeuroLab/Wearables/results/figures/IV_box.png", dpi = 300, height = 5, width = 8)
+
+```
+
+```{r}
+d %>%
+  drop_na() %>%
+  ggplot() + 
+  geom_boxplot(aes(x = Device, y = RA, fill = Group)) + 
+  theme_classic() + 
+  facet_wrap(~ Group) +
+  scale_fill_brewer(palette="Set1") +
+  ggsave("~/Box/CogNeuroLab/Wearables/results/figures/RA_box.png", dpi = 300, height = 5, width = 8)
+
+```
+
+```{r}
+d %>%
+  drop_na() %>%
+  ggplot() + 
+  geom_boxplot(aes(x = Device, y = M10, fill = Group)) + 
+  theme_classic() + 
+  facet_wrap(~ Group) +
+  scale_fill_brewer(palette="Set1") +
+  ggsave("~/Box/CogNeuroLab/wearables/results/figures/M10_box.png", dpi = 300, height = 5, width = 8)
+
+```
+
+```{r}
+d %>%
+  drop_na() %>%
+  ggplot() + 
+  geom_boxplot(aes(x = Device, y = L5, fill = Group)) + 
+  theme_classic() + 
+  facet_wrap(~ Group) +
+  scale_fill_brewer(palette="Set1") +
+  ggsave("~/Box/CogNeuroLab/Wearables/results/figures/L5_box.png", dpi = 300, height = 5, width = 8)
+
+```
+
+# Cosinor Circadian Measures
+
+```{r}
+
+d %>%
+  drop_na() %>%
+  ggplot() + 
+  geom_boxplot(aes(x = Device, y = actamp, fill = Group)) + 
+  theme_classic() + 
+  facet_wrap(~ Group) +
+  scale_fill_brewer(palette="Set1") + 
+  ylab("Amplitude") +
+  ggsave("~/Box/CogNeuroLab/Wearables/results/figures/amp_box.png", dpi = 300, height = 5, width = 8)
+
+d %>%
+  drop_na() %>%
+  ggplot() + 
+  geom_boxplot(aes(x = Device, y = actphi, fill = Group)) + 
+  theme_classic() + 
+  facet_wrap(~ Group) +
+  scale_fill_brewer(palette="Set1") + 
+  ylab("Acrophase") +
+  ggsave("~/Box/CogNeuroLab/Wearables/results/figures/acrophase_box.png", dpi = 300, height = 5, width = 8)
+
+d %>%
+  drop_na() %>%
+  ggplot() + 
+  geom_boxplot(aes(x = Device, y = actbeta, fill = Group)) + 
+  theme_classic() + 
+  facet_wrap(~ Group) +
+  scale_fill_brewer(palette="Set1") + 
+  ylab("Slope (Beta)") +
+  ggsave("~/Box/CogNeuroLab/Wearables/results/figures/slope_box.png", dpi = 300, height = 5, width = 8)
+
+d %>%
+  drop_na() %>%
+  ggplot() + 
+  geom_boxplot(aes(x = Device, y = actupmesor, fill = Group)) + 
+  theme_classic() + 
+  facet_wrap(~ Group) +
+  scale_fill_brewer(palette="Set1") + 
+  ylab("Up-Mesor") +
+  ggsave("~/Box/CogNeuroLab/Wearables/results/figures/upmesor_box.png", dpi = 300, height = 5, width = 8)
+
+d %>%
+  drop_na() %>%
+  ggplot() + 
+  geom_boxplot(aes(x = Device, y = actdownmesor, fill = Group)) + 
+  theme_classic() + 
+  facet_wrap(~ Group) +
+  scale_fill_brewer(palette="Set1") + 
+  ylab("Down-Mesor") +
+  ggsave("~/Box/CogNeuroLab/Wearables/results/figures/downmesor_box.png", dpi = 300, height = 5, width = 8)
+
+d %>%
+  drop_na() %>%
+  ggplot() + 
+  geom_boxplot(aes(x = Device, y = rsqact, fill = Group)) + 
+  theme_classic() + 
+  facet_wrap(~ Group) +
+  scale_fill_brewer(palette="Set1") + 
+  ylab("R-Squared") +
+  ggsave("~/Box/CogNeuroLab/Wearables/results/figures/rsqared_box.png", dpi = 300, height = 5, width = 8)
+
+d %>%
+  drop_na() %>%
+  ggplot() + 
+  geom_boxplot(aes(x = Device, y = fact, fill = Group)) + 
+  theme_classic() + 
+  facet_wrap(~ Group) +
+  scale_fill_brewer(palette="Set1") +
+  ylab("F-Statistic") +
+  ggsave("~/Box/CogNeuroLab/Wearables/results/figures/fact_box.png", dpi = 300, height = 5, width = 8)
+```
+
+# Other Plots
+
+```{r}
+
+d %>%
+  ggplot() + 
+  geom_boxplot(aes(x = d$IS[d$Device == "Fitbit Charge 2 HR"], y = d$IS[d$Device == "Actiwatch 2.0"], fill = Group)) + 
+  theme_classic() + 
+  facet_wrap(~ Group) +
+  scale_fill_brewer(palette="Set1")
+  
+
+```
+
+
+```{r scatter plot}
+d %>%
+  drop_na() %>%
+  dplyr::select(record_id, Device, Group, actphi) %>%
+  pivot_wider(id_cols = c("record_id", "Device", "Group"), names_from = Device, values_from = actphi) %>%
+  ggplot(aes(x = `Actiwatch 2.0`, y = `Fitbit Charge 2 HR`, group = Group, color = Group)) +
+  geom_point() + 
+  geom_abline() +
+  theme_classic() +
+  facet_wrap(~ Group) +
+  scale_color_brewer(palette="Set1") +
+  ggtitle("Acrophase") +
+  ggsave("~/Box/CogNeuroLab/Wearables/results/figures/acrophase_scatter.png", dpi = 300, height = 5, width = 8)
+
+d %>%
+  drop_na() %>%
+  dplyr::select(record_id, Device, Group, fact) %>%
+  pivot_wider(id_cols = c("record_id", "Device", "Group"), names_from = Device, values_from = fact) %>%
+  ggplot(aes(x = `Actiwatch 2.0`, y = `Fitbit Charge 2 HR`, group = Group, color = Group)) +
+  geom_point() + 
+  geom_abline() +
+  theme_classic() +
+  facet_wrap(~ Group) +
+  scale_color_brewer(palette="Set1") +
+  ggtitle("F-Statistic") +
+  ggsave("~/Box/CogNeuroLab/Wearables/results/figures/fact_scatter.png", dpi = 300, height = 5, width = 8)
+
+d %>%
+  drop_na() %>%
+  dplyr::select(record_id, Device, Group, actamp) %>%
+  pivot_wider(id_cols = c("record_id", "Device", "Group"), names_from = Device, values_from = actamp) %>%
+  ggplot(aes(x = `Actiwatch 2.0`, y = `Fitbit Charge 2 HR`, group = Group, color = Group)) +
+  geom_point() + 
+  geom_abline() +
+  theme_classic() +
+  facet_wrap(~ Group) +
+  scale_color_brewer(palette="Set1") +
+  ggtitle("Amplitude") +
+  ggsave("~/Box/CogNeuroLab/Wearables/results/figures/amp_scatter.png", dpi = 300, height = 5, width = 8)
+```
+
+
+```{r bland-altman plot}
+
+library(PairedData)
+
+d %>%
+  dplyr::select(record_id, Device, Group, IS) %>%
+  pivot_wider(id_cols = c("record_id", "Device", "Group"), names_from = Device, values_from = IS) %>%
+  as.data.frame() %>%
+  drop_na() -> d2
+
+cor.test(d2$`Fitbit Charge 2 HR`, d2$`Actiwatch 2.0`)
+
+baplot <- paired.plotBA(d2, "Actiwatch 2.0","Fitbit Charge 2 HR", groups="Group") + facet_grid(~Group) + theme_classic() + ggtitle("Interdaily Stability")
+
+ggsave("~/Box/CogNeuroLab/Wearables/results/figures/IS_baplot.png", plot = baplot, dpi = 300, height = 5, width = 8)
+
+```
+
+```{r}
+d %>%
+  dplyr::select(record_id, Device, Group, IV) %>%
+  pivot_wider(id_cols = c("record_id", "Device", "Group"), names_from = Device, values_from = IV) %>%
+  as.data.frame() %>%
+  drop_na() -> d2
+
+cor.test(d2$`Fitbit Charge 2 HR`, d2$`Actiwatch 2.0`)
+
+baplot <- paired.plotBA(d2, "Actiwatch 2.0","Fitbit Charge 2 HR", groups="Group") + facet_grid(~Group) + theme_classic() + ggtitle("Intradaily Variability")
+baplot
+
+ggsave("~/Box/CogNeuroLab/Wearables/results/figures/IV_baplot.png", plot = baplot, dpi = 300, height = 5, width = 8)
+```
+
+```{r bland altman plot RA}
+d %>%
+  dplyr::select(record_id, Device, Group, RA) %>%
+  pivot_wider(id_cols = c("record_id", "Device", "Group"), names_from = Device, values_from = RA) %>%
+  as.data.frame() %>%
+  drop_na() -> d2
+
+cor.test(d2$`Fitbit Charge 2 HR`, d2$`Actiwatch 2.0`)
+
+baplot <- paired.plotBA(d2, "Actiwatch 2.0","Fitbit Charge 2 HR", groups="Group") + facet_grid(~Group) + theme_classic() + ggtitle("Relative Amplitude")
+baplot
+
+ggsave("~/Box/CogNeuroLab/Wearables/results/figures/RA_baplot.png", plot = baplot, dpi = 300, height = 5, width = 8)
+```
+
+```{r}
+d %>%
+  dplyr::select(record_id, Device, Group, M10) %>%
+  pivot_wider(id_cols = c("record_id", "Device", "Group"), names_from = Device, values_from = M10) %>%
+  as.data.fM10me() %>%
+  drop_na() -> d2
+
+cor.test(d2$`Fitbit Charge 2 HR`, d2$`Actiwatch 2.0`)
+
+baplot <- paired.plotBA(d2, "Actiwatch 2.0","Fitbit Charge 2 HR", groups="Group") + facet_grid(~Group) + theme_classic() + ggtitle("M10")
+baplot
+
+ggsave("~/Box/CogNeuroLab/Wearables/results/figures/M10_baplot.png", plot = baplot, dpi = 300, height = 5, width = 8)
+```
+
+```{r}
+d %>%
+  dplyr::select(record_id, Device, Group, L5) %>%
+  pivot_wider(id_cols = c("record_id", "Device", "Group"), names_from = Device, values_from = L5) %>%
+  as.data.fL5me() %>%
+  drop_na() -> d2
+
+cor.test(d2$`Fitbit Charge 2 HR`, d2$`Actiwatch 2.0`)
+
+baplot <- paired.plotBA(d2, "Actiwatch 2.0","Fitbit Charge 2 HR", groups="Group") + facet_grid(~Group) + theme_classic() + ggtitle("L5")
+baplot
+
+ggsave("~/Box/CogNeuroLab/Wearables/results/figures/L5_baplot.png", plot = baplot, dpi = 300, height = 5, width = 8)
+```
+
+## Cross-correlation
+
+```{r}
+crosscor <- read_csv("~/Box/CogNeuroLab/Wearables/data/crosscor.csv")
+head(crosscor)
+
+d1 <- merge(d, crosscor, by.x = "record_id", by.y = "subject")
+head(d1)
+
+mean(crosscor$cross_cor, na.rm = T)
+
+d1 %>%
+  drop_na() %>%
+  ggplot() + 
+  geom_boxplot(aes(x = Group, y = cross_cor, fill = Group)) + 
+  theme_classic() + 
+  scale_fill_brewer(palette="Set1") + ylab("Cross-Correlation Coefficient") +
+  ggsave("~/Box/CogNeuroLab/Wearables/results/figures/crosscor_box.png", dpi = 300, height = 5, width = 8)
+
+```
+`
+
